@@ -4,7 +4,7 @@ Tic-tac-toe online made with NodeJS, Express and Socket.IO
 
 ## Installation
 
-Use the npm install to install tic-tac-toe.
+Use the npm install to install packages.
 
 ```bash
 npm install
