@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
+    <script>
+        const roomuuid = window.location.href.split("/")[4]
+        const socketHome = io("/home");
+        const socket = io("/game/");
+
+        let newGameBttn = '<button class="button" id="CreateRoom" onclick="newGame()">Create Room!</button>';
+        let gameEnd = false;
+    </script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #527191;
+            font-family: Helvetica;
+            font-weight: bold;
+        }
+        
+        div.tictactoe {
+            width: 400px;
+            height: 400px;
+            margin: 0 auto;
+            background-color: #34495e;
+            color: #fff;
+            border: 6px solid #2c3e50;
+            border-radius: 10px;
+            display: grid;
+            grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+            margin-top: 35px;
+        }
+        
+        div.tictactoe>div {
+            border: 6px solid #2c3e50;
+            border-radius: 2px;
+            font-family: Helvetica;
+            font-weight: bold;
+            font-size: 4em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #info {
+            /* border: 6px solid #2c3e50; */
+            margin-top: 20px;
+            text-align: center;
+            color: white;
+        }
+        
+        .button {
+            background-color: #e7e7e7;
+            /* Green */
+            border: none;
+            color: black;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div class="tictactoe">
+            <div id="0" class="tile"></div>
+            <div id="1" class="tile"></div>
+            <div id="2" class="tile"></div>
+            <div id="3" class="tile"></div>
+            <div id="4" class="tile"></div>
+            <div id="5" class="tile"></div>
+            <div id="6" class="tile"></div>
+            <div id="7" class="tile"></div>
+            <div id="8" class="tile"></div>
+        </div>
+
+        <div id="info"></div>
+    </div>
+
+</body>
+<script>
+    function newGame() {
+        socketHome.emit('create room')
+    }
+    socketHome.on('create room',
+        roomLink => {
+            window.location.href = `/game/${roomLink}`;
+        })
+
+    function changeInfoDiv(message) {
+        const infoDiv = document.getElementById('info');
+        console.log(infoDiv);
+        infoDiv.innerHTML = message;
+    }
+
+    function tileListener(e) {
+        if (gameEnd) return;
+        socket.emit('move:make', roomuuid, e.target.id);
+    }
+    const tiles = document.getElementsByClassName("tile")
+    for (let i = 0; i < tiles.length; i++) {
+        const tile = tiles[i];
+        tile.addEventListener("click", tileListener);
+    }
+
+
+
+    // infoDiv.innerHTML += window.location.href;
+    changeInfoDiv("Waiting for player... (1/2)<br>Send link to your friend! " + window.location.href)
+    socket.emit("joined room", roomuuid);
+
+
+
+    socket.on('ready to play', () => {
+        console.log("ready");
+
+        changeInfoDiv("Your enemy's turn");
+
+
+    });
+
+    socket.on('update board', (board) => {
+        console.log("updating board")
+        for (let i = 0; i < board.length; i++) {
+            const tile = board[i];
+            const tileDiv = document.getElementById(i);
+            tileDiv.innerHTML = tile;
+        }
+
+        if (!gameEnd) changeInfoDiv("Your enemy's turn");
+
+
+    })
+
+    socket.on('game-status', (status, turnMark) => {
+        console.log("GAME-STATUS TRIGGERED");
+
+        let text = "";
+
+        if (status == "draw") {
+            text += "DRAW!!! "
+
+        }
+
+        if (status == "win") {
+            text += `${turnMark} won!!! `
+        }
+
+        text += "<br><br>To play again, create new room<br>" + newGameBttn;
+        changeInfoDiv(text);
+        // console.log(status);
+        gameEnd = true;
+    })
+
+    socket.on('room is full', (socket) => {
+        changeInfoDiv("ROOM IS FULL!!");
+    })
+
+    socket.on('room not found', () => {
+        window.location.href = "/"
+    })
+
+    socket.on('your-turn', () => {
+        if (gameEnd) return;
+        changeInfoDiv("Your turn!");
+
+    });
+
+    socket.on('disconnected', () => {
+        gameEnd = true;
+        changeInfoDiv("Enemy has disconnected! To play again, create new room!<br><br>" + newGameBttn);
+    })
+</script>
+
+</html>

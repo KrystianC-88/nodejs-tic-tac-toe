@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-tac-toe</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
+    <script>
+        const socket = io("/home");
+    </script>
+
+
+    <style>
+        body {
+            background-color: #34495e;
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            font-family: Helvetica;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .button {
+            background-color: #e7e7e7;
+            /* Green */
+            border: none;
+            color: black;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+        
+        .container {
+            margin-top: 10%;
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Tic-tac-toe with friends!</h2>
+        <button class="button" id="CreateRoom">Create Room</button>
+    </div>
+</body>
+<script>
+    const createButton = document.getElementById("CreateRoom")
+    createButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        socket.emit("create room");
+    })
+
+    socket.on('create room', (roomLink) => {
+        console.log(roomLink);
+        window.location.href = `/game/${roomLink}`;
+    })
+</script>
+
+</html>
